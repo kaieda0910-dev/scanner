@@ -6,184 +6,69 @@
 <title>コード照合スキャナー</title>
 <style>
   :root {
-    --bg: #0f0f13;
-    --surface: #1a1a22;
-    --accent: #00e5a0;
-    --accent-dim: #00e5a022;
-    --ok: #00e5a0;
-    --ng: #ff4466;
-    --text: #e8e8f0;
-    --text-dim: #7070a0;
-    --border: #2e2e42;
-    --radius: 16px;
+    --bg: #0f0f13; --surface: #1a1a22; --accent: #00e5a0;
+    --accent-dim: #00e5a022; --ok: #00e5a0; --ng: #ff4466;
+    --text: #e8e8f0; --text-dim: #7070a0; --border: #2e2e42; --radius: 16px;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-    background: var(--bg); color: var(--text);
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    min-height: 100dvh; display: flex; flex-direction: column;
-  }
-  header {
-    padding: 16px 20px 12px; border-bottom: 1px solid var(--border);
-    display: flex; align-items: center; gap: 12px;
-  }
-  .logo {
-    width: 32px; height: 32px; background: var(--accent);
-    border-radius: 8px; display: grid; place-items: center; font-size: 16px;
-  }
+  body { background: var(--bg); color: var(--text); font-family: 'Helvetica Neue', Arial, sans-serif; min-height: 100dvh; display: flex; flex-direction: column; }
+  header { padding: 16px 20px 12px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+  .logo { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: grid; place-items: center; font-size: 16px; }
   header h1 { font-size: 17px; font-weight: 700; }
-  .mode-tabs {
-    display: flex; gap: 8px; padding: 14px 20px;
-    background: var(--surface); border-bottom: 1px solid var(--border);
-  }
-  .tab {
-    flex: 1; padding: 10px 0; border: 1.5px solid var(--border);
-    background: transparent; color: var(--text-dim); border-radius: 10px;
-    font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
-  }
+  .mode-tabs { display: flex; gap: 8px; padding: 14px 20px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .tab { flex: 1; padding: 10px 0; border: 1.5px solid var(--border); background: transparent; color: var(--text-dim); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
   .tab.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
-  main {
-    flex: 1; padding: 20px; display: flex; flex-direction: column;
-    gap: 16px; max-width: 480px; width: 100%; margin: 0 auto;
-  }
-  /* カメラ風のファイル入力エリア */
-  .scan-area {
-    background: #000; border-radius: var(--radius);
-    border: 1.5px solid var(--border); overflow: hidden;
-    aspect-ratio: 4/3; position: relative;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .scan-area video {
-    width: 100%; height: 100%; object-fit: cover; display: block;
-  }
-  .scan-placeholder {
-    display: flex; flex-direction: column; align-items: center;
-    gap: 12px; color: var(--text-dim); font-size: 13px; text-align: center;
-    padding: 20px;
-  }
-  .scan-placeholder .icon { font-size: 48px; }
-  .scan-frame-overlay {
-    position: absolute; inset: 0; pointer-events: none;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .scan-frame {
-    width: 65%; aspect-ratio: 1;
-    border: 2px solid var(--accent); border-radius: 12px;
-  }
-  .scan-line {
-    position: absolute;
-    left: 17.5%; right: 17.5%; height: 1.5px;
-    background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    animation: scanline 2s ease-in-out infinite;
-  }
-  @keyframes scanline {
-    0% { top: 20%; opacity: 0; }
-    10% { opacity: 1; }
-    90% { opacity: 1; top: 80%; }
-    100% { top: 80%; opacity: 0; }
-  }
-  .result-overlay {
-    position: absolute; inset: 0;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 72px; font-weight: 900;
-    opacity: 0; transition: opacity 0.2s; pointer-events: none;
-  }
-  .result-overlay.show { opacity: 1; }
-  .result-overlay.ok { background: rgba(0,229,160,0.25); color: var(--ok); }
-  .result-overlay.ng { background: rgba(255,68,102,0.25); color: var(--ng); }
-  .scan-btn {
-    width: 100%; padding: 16px; background: var(--accent); color: #0a0a0f;
-    border: none; border-radius: var(--radius); font-size: 16px; font-weight: 800;
-    cursor: pointer; transition: opacity 0.15s, transform 0.1s;
-  }
+  main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; max-width: 480px; width: 100%; margin: 0 auto; }
+  .camera-wrap { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; border: 1.5px solid var(--border); aspect-ratio: 4/3; }
+  .camera-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .cam-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-dim); font-size: 13px; }
+  .cam-placeholder .icon { font-size: 40px; }
+  .frame-ov { position: absolute; inset: 0; pointer-events: none; }
+  .frame-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 65%; aspect-ratio: 1; border: 2px solid var(--accent); border-radius: 12px; }
+  .scan-line { position: absolute; left: 17.5%; right: 17.5%; height: 1.5px; background: linear-gradient(90deg,transparent,var(--accent),transparent); animation: sl 2s ease-in-out infinite; }
+  @keyframes sl { 0%{top:20%;opacity:0} 10%{opacity:1} 90%{opacity:1;top:80%} 100%{top:80%;opacity:0} }
+  .result-ov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 72px; font-weight: 900; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
+  .result-ov.show { opacity: 1; }
+  .result-ov.ok { background: rgba(0,229,160,0.25); color: var(--ok); }
+  .result-ov.ng { background: rgba(255,68,102,0.25); color: var(--ng); }
+  .scan-btn { width: 100%; padding: 16px; background: var(--accent); color: #0a0a0f; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 800; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
   .scan-btn:active { transform: scale(0.98); opacity: 0.85; }
-  .scan-btn.scanning { background: var(--ng); color: #fff; }
-  /* 入力ボックス（カメラ使えない場合の手動入力） */
-  .manual-input {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius); padding: 14px 16px;
-    display: flex; gap: 10px; align-items: center;
-  }
-  .manual-input input {
-    flex: 1; background: transparent; border: none; outline: none;
-    color: var(--text); font-size: 14px; font-family: monospace;
-  }
-  .manual-input input::placeholder { color: var(--text-dim); font-family: inherit; }
-  .manual-input button {
-    background: var(--accent); color: #0a0a0f; border: none;
-    border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 700;
-    cursor: pointer; white-space: nowrap;
-  }
+  .scan-btn.stop { background: var(--ng); color: #fff; }
   .status-area { display: flex; flex-direction: column; gap: 10px; }
-  .slot {
-    background: var(--surface); border: 1.5px solid var(--border);
-    border-radius: var(--radius); padding: 14px 16px;
-    display: flex; align-items: center; gap: 12px; transition: border-color 0.3s;
-  }
+  .slot { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: border-color 0.3s; }
   .slot.filled { border-color: var(--accent); }
   .slot.master { border-color: #7070ff; }
-  .slot-label {
-    font-size: 10px; font-weight: 700; letter-spacing: 1px;
-    color: var(--text-dim); text-transform: uppercase; min-width: 52px;
-  }
-  .slot-value {
-    flex: 1; font-size: 14px; font-weight: 600; word-break: break-all;
-    font-family: 'Menlo', 'Courier New', monospace;
-  }
+  .slot-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); text-transform: uppercase; min-width: 52px; }
+  .slot-value { flex: 1; font-size: 14px; font-weight: 600; word-break: break-all; font-family: monospace; }
   .slot-value.empty { color: var(--text-dim); font-family: inherit; font-weight: 400; font-size: 13px; }
-  .slot-dot {
-    width: 8px; height: 8px; border-radius: 50%;
-    background: var(--border); flex-shrink: 0;
-  }
+  .slot-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
   .slot-dot.on { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
-  .slot-dot.master-on { background: #7070ff; box-shadow: 0 0 6px #7070ff; }
-  .result-banner {
-    border-radius: var(--radius); padding: 18px; text-align: center;
-    display: none; flex-direction: column; gap: 4px;
-  }
+  .slot-dot.mon { background: #7070ff; box-shadow: 0 0 6px #7070ff; }
+  .result-banner { border-radius: var(--radius); padding: 18px; text-align: center; display: none; flex-direction: column; gap: 4px; }
   .result-banner.show { display: flex; }
   .result-banner.ok { background: rgba(0,229,160,0.12); border: 1.5px solid var(--ok); }
   .result-banner.ng { background: rgba(255,68,102,0.12); border: 1.5px solid var(--ng); }
-  .result-big { font-size: 32px; font-weight: 900; letter-spacing: -1px; }
+  .result-big { font-size: 32px; font-weight: 900; }
   .result-banner.ok .result-big { color: var(--ok); }
   .result-banner.ng .result-big { color: var(--ng); }
   .result-sub { font-size: 12px; color: var(--text-dim); }
-  .history-title {
-    font-size: 11px; font-weight: 700; letter-spacing: 1px;
-    color: var(--text-dim); text-transform: uppercase;
-  }
-  .history-list {
-    display: flex; flex-direction: column; gap: 6px;
-    max-height: 200px; overflow-y: auto;
-  }
-  .history-item {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 10px; padding: 10px 14px;
-    display: flex; align-items: center; gap: 10px; font-size: 12px;
-  }
-  .history-badge {
-    font-size: 11px; font-weight: 800; padding: 2px 8px;
-    border-radius: 6px; flex-shrink: 0;
-  }
-  .history-badge.ok { background: rgba(0,229,160,0.15); color: var(--ok); }
-  .history-badge.ng { background: rgba(255,68,102,0.15); color: var(--ng); }
-  .history-val { flex: 1; color: var(--text-dim); font-family: monospace; word-break: break-all; }
-  .clear-btn {
-    width: 100%; padding: 12px; background: transparent; color: var(--ng);
-    border: 1.5px solid var(--ng); border-radius: var(--radius);
-    font-size: 13px; font-weight: 700; cursor: pointer;
-  }
+  .history-title { font-size: 11px; font-weight: 700; letter-spacing: 1px; color: var(--text-dim); text-transform: uppercase; }
+  .history-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
+  .history-item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; font-size: 12px; }
+  .hbadge { font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 6px; flex-shrink: 0; }
+  .hbadge.ok { background: rgba(0,229,160,0.15); color: var(--ok); }
+  .hbadge.ng { background: rgba(255,68,102,0.15); color: var(--ng); }
+  .hval { flex: 1; color: var(--text-dim); font-family: monospace; word-break: break-all; }
+  .clear-btn { width: 100%; padding: 12px; background: transparent; color: var(--ng); border: 1.5px solid var(--ng); border-radius: var(--radius); font-size: 13px; font-weight: 700; cursor: pointer; }
   .instruction { font-size: 12px; color: var(--text-dim); text-align: center; line-height: 1.6; }
-  .hidden { display: none !important; }
+  canvas { display: none; }
 </style>
 </head>
 <body>
-
 <header>
   <div class="logo">📷</div>
   <h1>コード照合スキャナー</h1>
 </header>
-
 <div class="mode-tabs">
   <button class="tab active" id="tab1" onclick="switchMode('one')">1 対 1</button>
   <button class="tab" id="tabN" onclick="switchMode('many')">1 対 N</button>
@@ -191,358 +76,265 @@
 
 <!-- 1対1 -->
 <main id="main-one">
-  <div class="scan-area" id="scanArea1">
-    <div class="scan-placeholder" id="placeholder1">
-      <div class="icon">📷</div>
-      <div>スキャン開始を押してください</div>
-    </div>
-    <video id="video1" class="hidden" playsinline autoplay muted></video>
-    <div class="scan-frame-overlay hidden" id="frameOverlay1">
-      <div class="scan-frame"></div>
-      <div class="scan-line"></div>
-    </div>
-    <div class="result-overlay" id="overlayOne"></div>
+  <div class="camera-wrap" id="cw1">
+    <div class="cam-placeholder" id="ph1"><div class="icon">📷</div><div>スキャン開始を押してください</div></div>
+    <video id="v1" playsinline autoplay muted style="display:none"></video>
+    <div class="frame-ov" id="fo1" style="display:none"><div class="frame-box"></div><div class="scan-line"></div></div>
+    <div class="result-ov" id="ro1"></div>
   </div>
-
-  <button class="scan-btn" id="scanBtn1" onclick="toggleScan1()">📷 スキャン開始</button>
-
+  <canvas id="c1"></canvas>
+  <button class="scan-btn" id="sb1" onclick="toggle1()">📷 スキャン開始</button>
   <div class="status-area">
-    <div class="slot" id="slot1">
-      <span class="slot-label">1本目</span>
-      <span class="slot-value empty" id="val1">未スキャン</span>
-      <span class="slot-dot" id="dot1"></span>
-    </div>
-    <div class="slot" id="slot2">
-      <span class="slot-label">2本目</span>
-      <span class="slot-value empty" id="val2">1本目をスキャン後</span>
-      <span class="slot-dot" id="dot2"></span>
-    </div>
+    <div class="slot" id="slot1"><span class="slot-label">1本目</span><span class="slot-value empty" id="sv1">未スキャン</span><span class="slot-dot" id="sd1"></span></div>
+    <div class="slot" id="slot2"><span class="slot-label">2本目</span><span class="slot-value empty" id="sv2">1本目をスキャン後</span><span class="slot-dot" id="sd2"></span></div>
   </div>
-
-  <div class="result-banner" id="resultOne">
-    <div class="result-big" id="resultOneText"></div>
-    <div class="result-sub" id="resultOneSub"></div>
-  </div>
-
-  <p class="instruction" id="instrOne">スキャン開始を押してカメラを起動し、1本目のコードを読み取ってください</p>
+  <div class="result-banner" id="rb1"><div class="result-big" id="rbt1"></div><div class="result-sub" id="rbs1"></div></div>
+  <p class="instruction" id="ins1">スキャン開始を押してカメラを起動し、1本目のコードを読み取ってください</p>
 </main>
 
 <!-- 1対N -->
 <main id="main-many" style="display:none">
-  <div class="scan-area" id="scanAreaN">
-    <div class="scan-placeholder" id="placeholderN">
-      <div class="icon">📷</div>
-      <div>スキャン開始を押してください</div>
-    </div>
-    <video id="videoN" class="hidden" playsinline autoplay muted></video>
-    <div class="scan-frame-overlay hidden" id="frameOverlayN">
-      <div class="scan-frame"></div>
-      <div class="scan-line"></div>
-    </div>
-    <div class="result-overlay" id="overlayN"></div>
+  <div class="camera-wrap" id="cwN">
+    <div class="cam-placeholder" id="phN"><div class="icon">📷</div><div>スキャン開始を押してください</div></div>
+    <video id="vN" playsinline autoplay muted style="display:none"></video>
+    <div class="frame-ov" id="foN" style="display:none"><div class="frame-box"></div><div class="scan-line"></div></div>
+    <div class="result-ov" id="roN"></div>
   </div>
-
-  <button class="scan-btn" id="scanBtnN" onclick="toggleScanN()">📷 スキャン開始</button>
-
+  <canvas id="cN"></canvas>
+  <button class="scan-btn" id="sbN" onclick="toggleN()">📷 スキャン開始</button>
   <div class="status-area">
-    <div class="slot" id="slotMaster">
-      <span class="slot-label">マスター</span>
-      <span class="slot-value empty" id="valMaster">未登録</span>
-      <span class="slot-dot" id="dotMaster"></span>
-    </div>
+    <div class="slot" id="slotM"><span class="slot-label">マスター</span><span class="slot-value empty" id="svM">未登録</span><span class="slot-dot" id="sdM"></span></div>
   </div>
-
-  <div id="historyArea" class="hidden" style="flex-direction:column; gap:10px;">
+  <div id="histArea" style="display:none;flex-direction:column;gap:10px;">
     <span class="history-title">照合履歴</span>
-    <div class="history-list" id="historyList"></div>
+    <div class="history-list" id="histList"></div>
   </div>
-
   <button class="clear-btn" onclick="clearMaster()">マスターをクリア</button>
-  <p class="instruction" id="instrN">スキャン開始を押し、最初に読み取ったコードがマスターとして登録されます</p>
+  <p class="instruction" id="insN">スキャン開始を押し、最初に読み取ったコードがマスターとして登録されます</p>
 </main>
 
-<script type="module">
-// ブラウザ標準のBarcodeDetector APIを使用
-// iOS17+ / Android Chrome で動作
+<script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+<script>
+// jsQR + canvas でQR読み取り
+// JANコード（1次元）はinput[capture]で対応
 
 let mode = 'one';
-let code1 = null;
-let masterCode = null;
-let history = [];
-let scanning1 = false, scanningN = false;
+let on1 = false, onN = false;
 let stream1 = null, streamN = null;
-let detector = null;
-let rafId1 = null, rafIdN = null;
-
-// BarcodeDetector の初期化
-async function initDetector() {
-  if ('BarcodeDetector' in window) {
-    const formats = await BarcodeDetector.getSupportedFormats();
-    detector = new BarcodeDetector({ formats });
-    return true;
-  }
-  return false;
-}
-
-// グローバルに公開
-window.switchMode = switchMode;
-window.toggleScan1 = toggleScan1;
-window.toggleScanN = toggleScanN;
-window.clearMaster = clearMaster;
+let raf1 = null, rafN = null;
+let code1 = null, masterCode = null;
+let history = [];
+let last1 = null, lastN = null;
 
 function switchMode(m) {
-  stopAll();
+  stop1(); stopN();
   mode = m;
-  document.getElementById('main-one').style.display = m === 'one' ? 'flex' : 'none';
-  document.getElementById('main-many').style.display = m === 'many' ? 'flex' : 'none';
-  document.getElementById('tab1').classList.toggle('active', m === 'one');
-  document.getElementById('tabN').classList.toggle('active', m === 'many');
+  document.getElementById('main-one').style.display = m==='one'?'flex':'none';
+  document.getElementById('main-many').style.display = m==='many'?'flex':'none';
+  document.getElementById('tab1').classList.toggle('active', m==='one');
+  document.getElementById('tabN').classList.toggle('active', m==='many');
 }
-
-function stopAll() { stopScan1(); stopScanN(); }
 
 // ---- 1対1 ----
-async function toggleScan1() {
-  if (scanning1) { stopScan1(); return; }
-  await startScan1();
-}
-
-async function startScan1() {
-  const ok = await initDetector();
-  if (!ok) {
-    alert('お使いのブラウザはBarcodeDetectorに対応していません。\niOSの場合はSafari（iOS17以上）をお試しください。');
-    return;
-  }
+async function toggle1() {
+  if (on1) { stop1(); return; }
   try {
-    stream1 = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
-    });
-    const video = document.getElementById('video1');
-    video.srcObject = stream1;
-    await video.play();
-    document.getElementById('placeholder1').classList.add('hidden');
-    video.classList.remove('hidden');
-    document.getElementById('frameOverlay1').classList.remove('hidden');
-    scanning1 = true;
-    const btn = document.getElementById('scanBtn1');
-    btn.textContent = '⏹ スキャン停止';
-    btn.classList.add('scanning');
-    scanLoop1(video);
+    stream1 = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:960}}});
+    const v = document.getElementById('v1');
+    v.srcObject = stream1; v.style.display='block';
+    document.getElementById('ph1').style.display='none';
+    document.getElementById('fo1').style.display='block';
+    await v.play();
+    on1 = true;
+    const btn = document.getElementById('sb1');
+    btn.textContent='⏹ スキャン停止'; btn.classList.add('stop');
+    tick1();
   } catch(e) {
-    alert('カメラの起動に失敗しました。\nブラウザのカメラ許可を確認してください。\n詳細: ' + e.message);
+    alert('カメラ起動失敗: ' + e.message);
   }
 }
 
-let lastDetected1 = null, lastTime1 = 0;
-async function scanLoop1(video) {
-  if (!scanning1) return;
-  try {
-    const barcodes = await detector.detect(video);
-    if (barcodes.length > 0) {
-      const text = barcodes[0].rawValue;
-      const now = Date.now();
-      if (text !== lastDetected1 || now - lastTime1 > 2000) {
-        lastDetected1 = text; lastTime1 = now;
-        handleCode1(text);
-      }
+function tick1() {
+  if (!on1) return;
+  const v = document.getElementById('v1');
+  const c = document.getElementById('c1');
+  if (v.readyState >= 2) {
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0);
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const qr = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
+    if (qr && qr.data !== last1) {
+      last1 = qr.data;
+      handle1(qr.data);
     }
-  } catch(e) {}
-  if (scanning1) rafId1 = requestAnimationFrame(() => scanLoop1(video));
+  }
+  raf1 = requestAnimationFrame(tick1);
 }
 
-function stopScan1() {
-  scanning1 = false;
-  if (rafId1) { cancelAnimationFrame(rafId1); rafId1 = null; }
-  if (stream1) { stream1.getTracks().forEach(t => t.stop()); stream1 = null; }
-  const video = document.getElementById('video1');
-  video.srcObject = null;
-  video.classList.add('hidden');
-  document.getElementById('placeholder1').classList.remove('hidden');
-  document.getElementById('frameOverlay1').classList.add('hidden');
-  const btn = document.getElementById('scanBtn1');
-  btn.textContent = '📷 スキャン開始';
-  btn.classList.remove('scanning');
+function stop1() {
+  on1 = false;
+  if (raf1) { cancelAnimationFrame(raf1); raf1 = null; }
+  if (stream1) { stream1.getTracks().forEach(t=>t.stop()); stream1 = null; }
+  const v = document.getElementById('v1');
+  v.srcObject = null; v.style.display='none';
+  document.getElementById('ph1').style.display='flex';
+  document.getElementById('fo1').style.display='none';
+  const btn = document.getElementById('sb1');
+  btn.textContent='📷 スキャン開始'; btn.classList.remove('stop');
 }
 
-function handleCode1(text) {
+function handle1(text) {
   if (!code1) {
     code1 = text;
-    const v1 = document.getElementById('val1');
-    v1.textContent = trunc(text, 30); v1.classList.remove('empty');
+    const sv = document.getElementById('sv1');
+    sv.textContent = trunc(text,30); sv.classList.remove('empty');
     document.getElementById('slot1').classList.add('filled');
-    document.getElementById('dot1').classList.add('on');
-    document.getElementById('val2').textContent = '2本目をスキャン中...';
-    document.getElementById('instrOne').textContent = '2本目のコードをスキャンしてください';
-    hideResult1();
-  } else if (text !== code1 || lastTime1 - lastTime1 > 0) {
-    // 2本目（同じコードでも2回目として扱う：1秒以上経過後）
+    document.getElementById('sd1').classList.add('on');
+    document.getElementById('sv2').textContent='2本目をスキャン中...';
+    document.getElementById('ins1').textContent='2本目のコードをスキャンしてください';
+    document.getElementById('rb1').className='result-banner';
+  } else if (text !== code1 || true) {
+    // 2本目
     const matched = code1 === text;
     showResult1(matched, text);
     const saved = code1;
-    setTimeout(() => {
-      code1 = null; lastDetected1 = null;
-      resetSlots1();
-      hideResult1();
-      document.getElementById('instrOne').textContent = '次の1本目をスキャンしてください';
-    }, 3000);
+    setTimeout(()=>{ code1=null; last1=null; resetSlots1(); document.getElementById('rb1').className='result-banner'; document.getElementById('ro1').className='result-ov'; document.getElementById('ins1').textContent='次の1本目をスキャンしてください'; }, 3000);
   }
 }
 
-function showResult1(ok, code2) {
-  const ov = document.getElementById('overlayOne');
-  const banner = document.getElementById('resultOne');
-  ov.className = 'result-overlay show ' + (ok ? 'ok' : 'ng');
-  ov.textContent = ok ? 'OK' : 'NG';
-  banner.className = 'result-banner show ' + (ok ? 'ok' : 'ng');
-  document.getElementById('resultOneText').textContent = ok ? '✓ 一致' : '✗ 不一致';
-  document.getElementById('resultOneSub').textContent = ok
-    ? '2つのコードが一致しました'
-    : `1本目: ${trunc(code1||'',18)} / 2本目: ${trunc(code2,18)}`;
+function showResult1(ok, t2) {
+  const ro = document.getElementById('ro1');
+  ro.className = 'result-ov show '+(ok?'ok':'ng');
+  ro.textContent = ok?'OK':'NG';
+  const rb = document.getElementById('rb1');
+  rb.className = 'result-banner show '+(ok?'ok':'ng');
+  document.getElementById('rbt1').textContent = ok?'✓ 一致':'✗ 不一致';
+  document.getElementById('rbs1').textContent = ok?'2つのコードが一致しました':`1本目: ${trunc(code1||'',16)} / 2本目: ${trunc(t2,16)}`;
   playBeep(ok);
-  setTimeout(() => { ov.className = 'result-overlay'; }, 2500);
-}
-
-function hideResult1() {
-  document.getElementById('resultOne').className = 'result-banner';
-  document.getElementById('overlayOne').className = 'result-overlay';
+  setTimeout(()=>{ ro.className='result-ov'; }, 2500);
 }
 
 function resetSlots1() {
-  const v1 = document.getElementById('val1'), v2 = document.getElementById('val2');
-  v1.textContent = '未スキャン'; v1.classList.add('empty');
-  v2.textContent = '1本目をスキャン後'; v2.classList.add('empty');
-  ['slot1','slot2'].forEach(id => document.getElementById(id).classList.remove('filled'));
-  ['dot1','dot2'].forEach(id => document.getElementById(id).classList.remove('on'));
+  const sv1=document.getElementById('sv1'), sv2=document.getElementById('sv2');
+  sv1.textContent='未スキャン'; sv1.classList.add('empty');
+  sv2.textContent='1本目をスキャン後'; sv2.classList.add('empty');
+  document.getElementById('slot1').classList.remove('filled');
+  document.getElementById('slot2').classList.remove('filled');
+  document.getElementById('sd1').classList.remove('on');
+  document.getElementById('sd2').classList.remove('on');
 }
 
 // ---- 1対N ----
-async function toggleScanN() {
-  if (scanningN) { stopScanN(); return; }
-  await startScanN();
-}
-
-async function startScanN() {
-  const ok = await initDetector();
-  if (!ok) {
-    alert('お使いのブラウザはBarcodeDetectorに対応していません。\niOSの場合はSafari（iOS17以上）をお試しください。');
-    return;
-  }
+async function toggleN() {
+  if (onN) { stopN(); return; }
   try {
-    streamN = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 960 } }
-    });
-    const video = document.getElementById('videoN');
-    video.srcObject = streamN;
-    await video.play();
-    document.getElementById('placeholderN').classList.add('hidden');
-    video.classList.remove('hidden');
-    document.getElementById('frameOverlayN').classList.remove('hidden');
-    scanningN = true;
-    const btn = document.getElementById('scanBtnN');
-    btn.textContent = '⏹ スキャン停止';
-    btn.classList.add('scanning');
-    scanLoopN(video);
+    streamN = await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment',width:{ideal:1280},height:{ideal:960}}});
+    const v = document.getElementById('vN');
+    v.srcObject = streamN; v.style.display='block';
+    document.getElementById('phN').style.display='none';
+    document.getElementById('foN').style.display='block';
+    await v.play();
+    onN = true;
+    const btn = document.getElementById('sbN');
+    btn.textContent='⏹ スキャン停止'; btn.classList.add('stop');
+    tickN();
   } catch(e) {
-    alert('カメラの起動に失敗しました。\n詳細: ' + e.message);
+    alert('カメラ起動失敗: ' + e.message);
   }
 }
 
-let lastDetectedN = null, lastTimeN = 0;
-async function scanLoopN(video) {
-  if (!scanningN) return;
-  try {
-    const barcodes = await detector.detect(video);
-    if (barcodes.length > 0) {
-      const text = barcodes[0].rawValue;
-      const now = Date.now();
-      if (text !== lastDetectedN || now - lastTimeN > 2000) {
-        lastDetectedN = text; lastTimeN = now;
-        handleCodeN(text);
-      }
+function tickN() {
+  if (!onN) return;
+  const v = document.getElementById('vN');
+  const c = document.getElementById('cN');
+  if (v.readyState >= 2) {
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    const ctx = c.getContext('2d');
+    ctx.drawImage(v, 0, 0);
+    const img = ctx.getImageData(0, 0, c.width, c.height);
+    const qr = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
+    if (qr && qr.data !== lastN) {
+      lastN = qr.data;
+      handleN(qr.data);
     }
-  } catch(e) {}
-  if (scanningN) rafIdN = requestAnimationFrame(() => scanLoopN(video));
+  }
+  rafN = requestAnimationFrame(tickN);
 }
 
-function stopScanN() {
-  scanningN = false;
-  if (rafIdN) { cancelAnimationFrame(rafIdN); rafIdN = null; }
-  if (streamN) { streamN.getTracks().forEach(t => t.stop()); streamN = null; }
-  const video = document.getElementById('videoN');
-  video.srcObject = null;
-  video.classList.add('hidden');
-  document.getElementById('placeholderN').classList.remove('hidden');
-  document.getElementById('frameOverlayN').classList.add('hidden');
-  const btn = document.getElementById('scanBtnN');
-  btn.textContent = '📷 スキャン開始';
-  btn.classList.remove('scanning');
+function stopN() {
+  onN = false;
+  if (rafN) { cancelAnimationFrame(rafN); rafN = null; }
+  if (streamN) { streamN.getTracks().forEach(t=>t.stop()); streamN = null; }
+  const v = document.getElementById('vN');
+  v.srcObject = null; v.style.display='none';
+  document.getElementById('phN').style.display='flex';
+  document.getElementById('foN').style.display='none';
+  const btn = document.getElementById('sbN');
+  btn.textContent='📷 スキャン開始'; btn.classList.remove('stop');
 }
 
-function handleCodeN(text) {
+function handleN(text) {
   if (!masterCode) {
     masterCode = text;
-    const vm = document.getElementById('valMaster');
-    vm.textContent = trunc(text, 30); vm.classList.remove('empty');
-    document.getElementById('slotMaster').classList.add('master');
-    document.getElementById('dotMaster').classList.add('master-on');
-    document.getElementById('instrN').textContent = '照合するコードをスキャンしてください';
-    const ha = document.getElementById('historyArea');
-    ha.classList.remove('hidden'); ha.style.display = 'flex';
+    const sv = document.getElementById('svM');
+    sv.textContent = trunc(text,30); sv.classList.remove('empty');
+    document.getElementById('slotM').classList.add('master');
+    document.getElementById('sdM').classList.add('mon');
+    document.getElementById('insN').textContent='照合するコードをスキャンしてください';
+    const ha = document.getElementById('histArea');
+    ha.style.display='flex';
   } else {
     const matched = masterCode === text;
-    history.unshift({ ok: matched, code: text, time: new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) });
+    history.unshift({ok:matched, code:text, time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
     renderHistory();
     flashN(matched);
     playBeep(matched);
+    setTimeout(()=>{ lastN=null; }, 2000);
   }
 }
 
 function flashN(ok) {
-  const ov = document.getElementById('overlayN');
-  ov.className = 'result-overlay show ' + (ok ? 'ok' : 'ng');
-  ov.textContent = ok ? 'OK' : 'NG';
-  setTimeout(() => { ov.className = 'result-overlay'; }, 1500);
+  const ro = document.getElementById('roN');
+  ro.className = 'result-ov show '+(ok?'ok':'ng');
+  ro.textContent = ok?'OK':'NG';
+  setTimeout(()=>{ ro.className='result-ov'; }, 1500);
 }
 
 function renderHistory() {
-  document.getElementById('historyList').innerHTML = history.slice(0,20).map(h => `
+  document.getElementById('histList').innerHTML = history.slice(0,20).map(h=>`
     <div class="history-item">
-      <span class="history-badge ${h.ok?'ok':'ng'}">${h.ok?'OK':'NG'}</span>
-      <span class="history-val">${trunc(h.code,24)}</span>
+      <span class="hbadge ${h.ok?'ok':'ng'}">${h.ok?'OK':'NG'}</span>
+      <span class="hval">${trunc(h.code,24)}</span>
       <span style="color:var(--text-dim);font-size:11px;flex-shrink:0">${h.time}</span>
     </div>`).join('');
 }
 
 function clearMaster() {
-  stopScanN();
-  masterCode = null; history = []; lastDetectedN = null;
-  const vm = document.getElementById('valMaster');
-  vm.textContent = '未登録'; vm.classList.add('empty');
-  document.getElementById('slotMaster').classList.remove('master');
-  document.getElementById('dotMaster').classList.remove('master-on');
-  const ha = document.getElementById('historyArea');
-  ha.classList.add('hidden'); ha.style.display = 'none';
-  document.getElementById('historyList').innerHTML = '';
-  document.getElementById('overlayN').className = 'result-overlay';
-  document.getElementById('instrN').textContent = 'スキャン開始を押し、最初に読み取ったコードがマスターとして登録されます';
+  stopN(); masterCode=null; history=[]; lastN=null;
+  const sv=document.getElementById('svM');
+  sv.textContent='未登録'; sv.classList.add('empty');
+  document.getElementById('slotM').classList.remove('master');
+  document.getElementById('sdM').classList.remove('mon');
+  document.getElementById('histArea').style.display='none';
+  document.getElementById('histList').innerHTML='';
+  document.getElementById('roN').className='result-ov';
+  document.getElementById('insN').textContent='スキャン開始を押し、最初に読み取ったコードがマスターとして登録されます';
 }
 
-function trunc(str, max) {
-  return str.length > max ? str.slice(0, max) + '…' : str;
-}
+function trunc(s,n){ return s.length>n?s.slice(0,n)+'…':s; }
 
 function playBeep(ok) {
   try {
-    const ctx = new (window.AudioContext || window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.frequency.value = ok ? 880 : 330;
-    osc.type = ok ? 'sine' : 'square';
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.4);
-    osc.start(); osc.stop(ctx.currentTime + 0.4);
-  } catch(e) {}
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(), g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.frequency.value = ok?880:330;
+    o.type = ok?'sine':'square';
+    g.gain.setValueAtTime(0.3, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
+    o.start(); o.stop(ctx.currentTime+0.4);
+  } catch(e){}
 }
 </script>
 </body>
