@@ -21,18 +21,17 @@
   main { flex: 1; padding: 20px; display: flex; flex-direction: column; gap: 16px; max-width: 480px; width: 100%; margin: 0 auto; }
   .camera-wrap { position: relative; background: #000; border-radius: var(--radius); overflow: hidden; border: 1.5px solid var(--border); aspect-ratio: 4/3; }
   .camera-wrap video { width: 100%; height: 100%; object-fit: cover; display: block; }
-  .cam-placeholder { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-dim); font-size: 13px; }
-  .cam-placeholder .icon { font-size: 40px; }
+  .cam-ph { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; color: var(--text-dim); font-size: 13px; }
+  .cam-ph .icon { font-size: 40px; }
   .frame-ov { position: absolute; inset: 0; pointer-events: none; }
-  .frame-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 65%; aspect-ratio: 1; border: 2px solid var(--accent); border-radius: 12px; }
-  .scan-line { position: absolute; left: 17.5%; right: 17.5%; height: 1.5px; background: linear-gradient(90deg,transparent,var(--accent),transparent); animation: sl 2s ease-in-out infinite; }
-  @keyframes sl { 0%{top:20%;opacity:0} 10%{opacity:1} 90%{opacity:1;top:80%} 100%{top:80%;opacity:0} }
+  .frame-box { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 75%; aspect-ratio: 3/1; border: 2px solid var(--accent); border-radius: 8px; }
+  .scan-line { position: absolute; left: 12.5%; right: 12.5%; height: 1.5px; background: linear-gradient(90deg,transparent,var(--accent),transparent); animation: sl 2s ease-in-out infinite; }
+  @keyframes sl { 0%{top:25%;opacity:0} 10%{opacity:1} 90%{opacity:1;top:75%} 100%{top:75%;opacity:0} }
   .result-ov { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 72px; font-weight: 900; opacity: 0; transition: opacity 0.2s; pointer-events: none; }
   .result-ov.show { opacity: 1; }
   .result-ov.ok { background: rgba(0,229,160,0.25); color: var(--ok); }
   .result-ov.ng { background: rgba(255,68,102,0.25); color: var(--ng); }
-  .scan-btn { width: 100%; padding: 16px; background: var(--accent); color: #0a0a0f; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 800; cursor: pointer; transition: opacity 0.15s, transform 0.1s; }
-  .scan-btn:active { transform: scale(0.98); opacity: 0.85; }
+  .scan-btn { width: 100%; padding: 16px; background: var(--accent); color: #0a0a0f; border: none; border-radius: var(--radius); font-size: 16px; font-weight: 800; cursor: pointer; }
   .scan-btn.stop { background: var(--ng); color: #fff; }
   .status-area { display: flex; flex-direction: column; gap: 10px; }
   .slot { background: var(--surface); border: 1.5px solid var(--border); border-radius: var(--radius); padding: 14px 16px; display: flex; align-items: center; gap: 12px; transition: border-color 0.3s; }
@@ -74,10 +73,9 @@
   <button class="tab" id="tabN" onclick="switchMode('many')">1 対 N</button>
 </div>
 
-<!-- 1対1 -->
 <main id="main-one">
-  <div class="camera-wrap" id="cw1">
-    <div class="cam-placeholder" id="ph1"><div class="icon">📷</div><div>スキャン開始を押してください</div></div>
+  <div class="camera-wrap">
+    <div class="cam-ph" id="ph1"><div class="icon">📷</div><div>スキャン開始を押してください</div></div>
     <video id="v1" playsinline autoplay muted style="display:none"></video>
     <div class="frame-ov" id="fo1" style="display:none"><div class="frame-box"></div><div class="scan-line"></div></div>
     <div class="result-ov" id="ro1"></div>
@@ -92,10 +90,9 @@
   <p class="instruction" id="ins1">スキャン開始を押してカメラを起動し、1本目のコードを読み取ってください</p>
 </main>
 
-<!-- 1対N -->
 <main id="main-many" style="display:none">
-  <div class="camera-wrap" id="cwN">
-    <div class="cam-placeholder" id="phN"><div class="icon">📷</div><div>スキャン開始を押してください</div></div>
+  <div class="camera-wrap">
+    <div class="cam-ph" id="phN"><div class="icon">📷</div><div>スキャン開始を押してください</div></div>
     <video id="vN" playsinline autoplay muted style="display:none"></video>
     <div class="frame-ov" id="foN" style="display:none"><div class="frame-box"></div><div class="scan-line"></div></div>
     <div class="result-ov" id="roN"></div>
@@ -113,11 +110,12 @@
   <p class="instruction" id="insN">スキャン開始を押し、最初に読み取ったコードがマスターとして登録されます</p>
 </main>
 
+<!-- QR用 -->
 <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
-<script>
-// jsQR + canvas でQR読み取り
-// JANコード（1次元）はinput[capture]で対応
+<!-- 1次元バーコード用 -->
+<script src="https://cdn.jsdelivr.net/npm/zbar-wasm@0.9.15/dist/zbar.min.js"></script>
 
+<script>
 let mode = 'one';
 let on1 = false, onN = false;
 let stream1 = null, streamN = null;
@@ -125,6 +123,12 @@ let raf1 = null, rafN = null;
 let code1 = null, masterCode = null;
 let history = [];
 let last1 = null, lastN = null;
+let zbarReady = false;
+
+// zbar-wasm 初期化
+if (typeof ZBar !== 'undefined') {
+  ZBar.getDefaultScanner().then(() => { zbarReady = true; }).catch(()=>{});
+}
 
 function switchMode(m) {
   stop1(); stopN();
@@ -133,6 +137,30 @@ function switchMode(m) {
   document.getElementById('main-many').style.display = m==='many'?'flex':'none';
   document.getElementById('tab1').classList.toggle('active', m==='one');
   document.getElementById('tabN').classList.toggle('active', m==='many');
+}
+
+async function scanFrame(canvas, video) {
+  if (video.readyState < 2) return null;
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(video, 0, 0);
+  const img = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+  // QRコード試行
+  const qr = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
+  if (qr) return qr.data;
+
+  // 1次元バーコード試行（zbar-wasm）
+  if (zbarReady && typeof ZBar !== 'undefined') {
+    try {
+      const scanner = await ZBar.getDefaultScanner();
+      const results = await scanner.scanImage(img);
+      if (results && results.length > 0) return results[0].value;
+    } catch(e) {}
+  }
+
+  return null;
 }
 
 // ---- 1対1 ----
@@ -149,27 +177,17 @@ async function toggle1() {
     const btn = document.getElementById('sb1');
     btn.textContent='⏹ スキャン停止'; btn.classList.add('stop');
     tick1();
-  } catch(e) {
-    alert('カメラ起動失敗: ' + e.message);
-  }
+  } catch(e) { alert('カメラ起動失敗: ' + e.message); }
 }
 
-function tick1() {
+async function tick1() {
   if (!on1) return;
-  const v = document.getElementById('v1');
-  const c = document.getElementById('c1');
-  if (v.readyState >= 2) {
-    c.width = v.videoWidth; c.height = v.videoHeight;
-    const ctx = c.getContext('2d');
-    ctx.drawImage(v, 0, 0);
-    const img = ctx.getImageData(0, 0, c.width, c.height);
-    const qr = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
-    if (qr && qr.data !== last1) {
-      last1 = qr.data;
-      handle1(qr.data);
-    }
+  const result = await scanFrame(document.getElementById('c1'), document.getElementById('v1'));
+  if (result && result !== last1) {
+    last1 = result;
+    handle1(result);
   }
-  raf1 = requestAnimationFrame(tick1);
+  if (on1) raf1 = requestAnimationFrame(tick1);
 }
 
 function stop1() {
@@ -194,12 +212,18 @@ function handle1(text) {
     document.getElementById('sv2').textContent='2本目をスキャン中...';
     document.getElementById('ins1').textContent='2本目のコードをスキャンしてください';
     document.getElementById('rb1').className='result-banner';
-  } else if (text !== code1 || true) {
-    // 2本目
+    // 少し待ってからlast1をリセット（同じコードを2本目として読めるように）
+    setTimeout(()=>{ last1 = null; }, 1500);
+  } else {
     const matched = code1 === text;
     showResult1(matched, text);
-    const saved = code1;
-    setTimeout(()=>{ code1=null; last1=null; resetSlots1(); document.getElementById('rb1').className='result-banner'; document.getElementById('ro1').className='result-ov'; document.getElementById('ins1').textContent='次の1本目をスキャンしてください'; }, 3000);
+    setTimeout(()=>{
+      code1=null; last1=null;
+      resetSlots1();
+      document.getElementById('rb1').className='result-banner';
+      document.getElementById('ro1').className='result-ov';
+      document.getElementById('ins1').textContent='次の1本目をスキャンしてください';
+    }, 3000);
   }
 }
 
@@ -210,7 +234,7 @@ function showResult1(ok, t2) {
   const rb = document.getElementById('rb1');
   rb.className = 'result-banner show '+(ok?'ok':'ng');
   document.getElementById('rbt1').textContent = ok?'✓ 一致':'✗ 不一致';
-  document.getElementById('rbs1').textContent = ok?'2つのコードが一致しました':`1本目: ${trunc(code1||'',16)} / 2本目: ${trunc(t2,16)}`;
+  document.getElementById('rbs1').textContent = ok?'2つのコードが一致しました':`1: ${trunc(code1||'',14)} / 2: ${trunc(t2,14)}`;
   playBeep(ok);
   setTimeout(()=>{ ro.className='result-ov'; }, 2500);
 }
@@ -239,27 +263,17 @@ async function toggleN() {
     const btn = document.getElementById('sbN');
     btn.textContent='⏹ スキャン停止'; btn.classList.add('stop');
     tickN();
-  } catch(e) {
-    alert('カメラ起動失敗: ' + e.message);
-  }
+  } catch(e) { alert('カメラ起動失敗: ' + e.message); }
 }
 
-function tickN() {
+async function tickN() {
   if (!onN) return;
-  const v = document.getElementById('vN');
-  const c = document.getElementById('cN');
-  if (v.readyState >= 2) {
-    c.width = v.videoWidth; c.height = v.videoHeight;
-    const ctx = c.getContext('2d');
-    ctx.drawImage(v, 0, 0);
-    const img = ctx.getImageData(0, 0, c.width, c.height);
-    const qr = jsQR(img.data, img.width, img.height, {inversionAttempts:'dontInvert'});
-    if (qr && qr.data !== lastN) {
-      lastN = qr.data;
-      handleN(qr.data);
-    }
+  const result = await scanFrame(document.getElementById('cN'), document.getElementById('vN'));
+  if (result && result !== lastN) {
+    lastN = result;
+    handleN(result);
   }
-  rafN = requestAnimationFrame(tickN);
+  if (onN) rafN = requestAnimationFrame(tickN);
 }
 
 function stopN() {
@@ -282,8 +296,8 @@ function handleN(text) {
     document.getElementById('slotM').classList.add('master');
     document.getElementById('sdM').classList.add('mon');
     document.getElementById('insN').textContent='照合するコードをスキャンしてください';
-    const ha = document.getElementById('histArea');
-    ha.style.display='flex';
+    document.getElementById('histArea').style.display='flex';
+    setTimeout(()=>{ lastN=null; }, 1500);
   } else {
     const matched = masterCode === text;
     history.unshift({ok:matched, code:text, time:new Date().toLocaleTimeString('ja-JP',{hour:'2-digit',minute:'2-digit',second:'2-digit'})});
@@ -329,8 +343,7 @@ function playBeep(ok) {
     const ctx = new (window.AudioContext||window.webkitAudioContext)();
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.connect(g); g.connect(ctx.destination);
-    o.frequency.value = ok?880:330;
-    o.type = ok?'sine':'square';
+    o.frequency.value = ok?880:330; o.type = ok?'sine':'square';
     g.gain.setValueAtTime(0.3, ctx.currentTime);
     g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.4);
     o.start(); o.stop(ctx.currentTime+0.4);
